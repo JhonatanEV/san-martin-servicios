@@ -863,6 +863,61 @@ input:disabled, select:disabled, textarea:disabled {
   border-radius: 3px;
 }
 
+/* Sub-pestañas para organizar secciones */
+.subtabs-bar {
+  display: flex;
+  gap: 8px;
+  background-color: var(--bg-card);
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  margin-bottom: 16px;
+  overflow-x: auto;
+}
+
+.subtab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.subtab-btn:hover {
+  color: var(--text-main);
+  background-color: var(--bg-subtle);
+}
+
+.subtab-btn.active {
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border-color: rgba(37, 99, 235, 0.25);
+}
+
+.subtab-content {
+  display: none;
+}
+
+.subtab-content.active {
+  display: block;
+}
+
+.view-panel {
+  display: none;
+}
+
+.view-panel.active {
+  display: block;
+}
+
 /* Modal y Pantalla de Login por DNI */
 .login-overlay {
   position: fixed;

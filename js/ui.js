@@ -1,20 +1,21 @@
 /**
- * Interfaz de usuario · Edificio San Martín
- * Diseño optimizado para celular y escritorio, sin scroll horizontal, iconografía SVG limpia.
- * Soporte de autenticación por DNI (Admin 70424972 e Inquilinos) y gestión de usuarios.
+ * Controlador de Interfaz de Usuario · Edificio San Martín
+ * Estructura modular basada en HTML semántico, sub-pestañas organizadas
+ * y autenticación por DNI (Admin 70424972 e Inquilinos).
  */
 
 'use strict';
 
 let S = null;
-let V = 'month';          // 'month' | 'year' | 'receipt' | 'cfg' | 'users'
+let V = 'month';          // 'month' | 'year' | 'receipt' | 'users' | 'cfg'
+let ACTIVE_SUBTAB = 'tab-lecturas'; // 'tab-lecturas' | 'tab-aportes' | 'tab-cobranza'
 let Y = new Date().getFullYear();
 let K = '';               // 'YYYY-MM' activo
-let SELECTED_APT = '301'; // Departamento activo para recibos
+let SELECTED_APT = '301'; // Departamento seleccionado para recibos
 let EDIT = false;
 let DIRTY = false;
 let SNAP = null;
-let CURRENT_USER = null;  // Usuario autenticado por DNI
+let CURRENT_USER = null;
 
 const $ = selector => document.querySelector(selector);
 const $$ = selector => document.querySelectorAll(selector);
@@ -24,7 +25,6 @@ const fNum = val => (+val || 0).toLocaleString('es-PE');
 
 const isAdmin = () => CURRENT_USER && (String(CURRENT_USER.dni).trim() === '70424972' || CURRENT_USER.role === 'admin');
 
-// Iconos SVG limpios y consistentes
 const ICONS = {
   building: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M12 6h.01"></path><path d="M12 10h.01"></path><path d="M12 14h.01"></path><path d="M16 10h.01"></path><path d="M16 14h.01"></path><path d="M8 10h.01"></path><path d="M8 14h.01"></path></svg>`,
   calendar: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`,
@@ -69,9 +69,7 @@ function showLoginOverlay(errorMsg = '') {
   overlay.className = 'login-overlay';
   overlay.innerHTML = `
     <div class="login-card">
-      <div class="login-icon">
-        ${ICONS.building}
-      </div>
+      <div class="login-icon">${ICONS.building}</div>
       <h2 class="login-title">Edificio San Martín</h2>
       <div class="login-subtitle">Control de Servicios · Acceso con DNI</div>
 
@@ -80,15 +78,15 @@ function showLoginOverlay(errorMsg = '') {
       <form id="loginForm" style="display:flex;flex-direction:column;gap:12px;text-align:left;">
         <div>
           <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px;">NÚMERO DE DNI</label>
-          <input type="text" id="loginDni" maxlength="12" inputmode="numeric" placeholder="Ingresa tu DNI (ej. 87654321)" required autofocus style="width:100%;font-size:16px;letter-spacing:1px;font-weight:600;text-align:center;">
+          <input type="text" id="loginDni" maxlength="12" inputmode="numeric" placeholder="Ingresa tu DNI (ej. 70424972)" required autofocus style="width:100%;font-size:16px;letter-spacing:1px;font-weight:600;text-align:center;">
         </div>
         <button type="submit" class="btn btn-primary" style="padding:12px;font-size:14px;font-weight:700;margin-top:6px;">
           Ingresar al Sistema
         </button>
       </form>
       <div style="font-size:11px;color:var(--text-muted);margin-top:16px;line-height:1.5;">
-        Administrador principal: <b>Jonatan</b><br>
-        Los inquilinos ingresan con su DNI asignado.
+        Administrador principal: <b>70424972</b><br>
+        Inquilinos: ingresen con su DNI registrado.
       </div>
     </div>
   `;
@@ -106,21 +104,14 @@ function showLoginOverlay(errorMsg = '') {
 function doLogin(dni) {
   if (!S || !S.users) return;
 
-  // Si es el admin principal, siempre permitir
   let user = S.users.find(u => String(u.dni).trim() === dni);
   if (!user && dni === '70424972') {
-    user = {
-      dni: '70424972',
-      nombre: 'Administrador Principal',
-      apt: 'Todos',
-      role: 'admin',
-      status: 'Activo'
-    };
+    user = { dni: '70424972', nombre: 'Administrador Principal', apt: 'Todos', role: 'admin', status: 'Activo' };
     S.users.unshift(user);
   }
 
   if (!user) {
-    showLoginOverlay(`El DNI <b>${dni}</b> no está registrado. Comunícate con la administración para darte de alta.`);
+    showLoginOverlay(`El DNI <b>${dni}</b> no está registrado. Comunícate con la administración.`);
     return;
   }
 
@@ -135,9 +126,9 @@ function doLogin(dni) {
 
   if (!isAdmin() && user.apt && user.apt !== 'Todos') {
     SELECTED_APT = user.apt;
-    V = 'receipt'; // Dirigir al inquilino a su recibo directamente
+    switchView('receipt');
   } else {
-    V = 'month';
+    switchView('month');
   }
 
   toast(`Bienvenido, ${user.nombre}`, 'success');
@@ -150,6 +141,35 @@ function logout() {
   showLoginOverlay();
 }
 
+function switchView(viewName) {
+  V = viewName;
+  const admin = isAdmin();
+
+  if ((V === 'cfg' || V === 'users') && !admin) {
+    V = 'month';
+  }
+
+  $$('nav button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.v === V);
+  });
+
+  $$('.view-panel').forEach(panel => {
+    panel.classList.toggle('active', panel.id === `view-${V}`);
+  });
+
+  render();
+}
+
+function switchSubtab(tabId) {
+  ACTIVE_SUBTAB = tabId;
+  $$('.subtab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.subtab === tabId);
+  });
+  $$('.subtab-content').forEach(content => {
+    content.classList.toggle('active', content.id === tabId);
+  });
+}
+
 function render() {
   if (!CURRENT_USER) {
     showLoginOverlay();
@@ -158,44 +178,36 @@ function render() {
 
   const admin = isAdmin();
 
-  // Controlar visibilidad de pestañas según rol
-  const btnCfg = $('nav button[data-v="cfg"]');
+  // Controlar visibilidad de navegación
+  const btnCfg = $('#nav-btn-cfg');
   const btnUsers = $('#nav-btn-users');
   if (btnCfg) btnCfg.style.display = admin ? 'inline-flex' : 'none';
   if (btnUsers) btnUsers.style.display = admin ? 'inline-flex' : 'none';
 
-  $$('nav button').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.v === V);
-  });
-
-  const app = $('#app');
-  let content = '';
+  renderFilterBar();
+  updateHeaderBar();
 
   if (V === 'month') {
-    content = filterBar() + vMonth();
+    renderMonthView();
   } else if (V === 'year') {
-    content = filterBar() + vYear();
+    renderYearView();
   } else if (V === 'receipt') {
-    content = filterBar() + vReceipt();
-  } else if (V === 'cfg' && admin) {
-    content = vCfg();
+    renderReceiptView();
   } else if (V === 'users' && admin) {
-    content = vUsers();
-  } else {
-    V = 'month';
-    content = filterBar() + vMonth();
+    renderUsersView();
+  } else if (V === 'cfg' && admin) {
+    renderCfgView();
   }
 
-  app.innerHTML = content;
-  updateHeaderBar();
   applyLockState();
 }
 
-/**
- * Barra superior con selector de año y chips de meses
- */
-function filterBar() {
-  if (!S || V === 'cfg' || V === 'users') return '';
+function renderFilterBar() {
+  const container = $('#filter-bar-container');
+  if (!container || !S || V === 'cfg' || V === 'users') {
+    if (container) container.innerHTML = '';
+    return;
+  }
 
   const years = new Set(Object.keys(S.months).map(k => +k.slice(0, 4)));
   years.add(Y);
@@ -225,35 +237,50 @@ function filterBar() {
   }
 
   html += `</div>`;
-  return html;
+  container.innerHTML = html;
 }
 
 /**
- * Vista de Control Mensual
+ * Renderiza la vista de Control Mensual dividida en 3 Sub-pestañas
  */
-function vMonth() {
+function renderMonthView() {
   const m = S.months[K];
   const [yearStr, monthNum] = K.split('-');
   const monthName = MN[+monthNum - 1] || K;
   const admin = isAdmin();
 
+  const wrapper = $('#month-content-wrapper');
+  const kpisContainer = $('#month-kpis-container');
+  const alertsContainer = $('#month-alerts-container');
+
   if (!m) {
     const prevMonths = Object.keys(S.months).filter(x => x < K).sort();
     const lastMonthKey = prevMonths.pop();
 
-    return `
-      <div class="card" style="text-align:center;padding:48px 20px;">
-        <div style="color:var(--primary);margin-bottom:12px;">${ICONS.calendar}</div>
-        <h2 style="font-size:18px;font-weight:700;margin-bottom:8px;">${monthName} ${yearStr} no está registrado</h2>
-        <p style="color:var(--text-muted);max-width:480px;margin:0 auto 20px;font-size:13px;">
-          ${admin ? `Registra el mes para comenzar a ingresar consumos y gastos comunes. ${lastMonthKey ? `Se copiarán las lecturas de <b>${lastMonthKey}</b>.` : ''}` : 'Este mes aún no ha sido publicado por la administración.'}
-        </p>
-        ${admin ? `
-          <button class="btn btn-primary" data-action="create-month">
-            ${ICONS.plus} Registrar Mes de ${monthName} ${yearStr}
-          </button>
-        ` : ''}
-      </div>`;
+    if (kpisContainer) kpisContainer.innerHTML = '';
+    if (alertsContainer) alertsContainer.innerHTML = '';
+    if (wrapper) {
+      wrapper.innerHTML = `
+        <div class="card" style="text-align:center;padding:48px 20px;">
+          <div style="color:var(--primary);margin-bottom:12px;">${ICONS.calendar}</div>
+          <h2 style="font-size:18px;font-weight:700;margin-bottom:8px;">${monthName} ${yearStr} no está registrado</h2>
+          <p style="color:var(--text-muted);max-width:480px;margin:0 auto 20px;font-size:13px;">
+            ${admin ? `Registra el mes para comenzar a ingresar consumos y gastos comunes. ${lastMonthKey ? `Se copiarán las lecturas de <b>${lastMonthKey}</b>.` : ''}` : 'Este mes aún no ha sido publicado por la administración.'}
+          </p>
+          ${admin ? `
+            <button class="btn btn-primary" data-action="create-month">
+              ${ICONS.plus} Registrar Mes de ${monthName} ${yearStr}
+            </button>
+          ` : ''}
+        </div>`;
+    }
+    return;
+  }
+
+  // Asegurar que el contenedor esté visible
+  if (wrapper && !wrapper.querySelector('.subtabs-bar')) {
+    render();
+    return;
   }
 
   const c = calc(S, K);
@@ -264,17 +291,8 @@ function vMonth() {
   const totalCobrado = APTS.reduce((s, a) => s + c[a].paid, 0);
   const saldoPendiente = totalPagar - totalCobrado;
 
-  const warningList = getMonthAlerts(K, c);
-
-  const weightOpts = [
-    ['1', '1.0'],
-    ['0.5', '0.5'],
-    ['0.3333333333', '1/3'],
-    ['0', '0']
-  ];
-
-  return `
-    <!-- KPIs del Mes -->
+  // 1. KPIs
+  kpisContainer.innerHTML = `
     <div class="kpi-grid">
       <div class="kpi-card kpi-total">
         <div class="kpi-label">${ICONS.cash} Total a Pagar Edificio</div>
@@ -302,295 +320,222 @@ function vMonth() {
         <div class="kpi-subtext">${saldoPendiente > 0.05 ? `Falta cobrar: S/ ${f2(saldoPendiente)}` : 'Cobranza al día'}</div>
       </div>
     </div>
+  `;
 
-    <!-- Alertas -->
-    ${warningList.map(msg => `
-      <div class="alert-box alert-warning">
-        ${ICONS.alert}
-        <div><b>Alerta:</b> ${msg}</div>
-      </div>
-    `).join('')}
-
-    <!-- Recibos Generales -->
-    <div class="card">
-      <div class="card-header">
-        <h3 class="card-title">${ICONS.receipt} Recibos Generales · ${monthName} ${yearStr}</h3>
-      </div>
-      <div class="form-grid-4">
-        <div class="form-group">
-          <label>Recibo Sedapal / Agua (S/)</label>
-          <input type="number" step="0.01" data-action="field" data-prop="w" value="${m.w ?? ''}" placeholder="0.00">
-        </div>
-        <div class="form-group">
-          <label>Recibo Luz Área Común (S/)</label>
-          <input type="number" step="0.01" data-action="field" data-prop="e" value="${m.e ?? ''}" placeholder="0.00">
-        </div>
-        <div class="form-group">
-          <label>Lectura Desde</label>
-          <input type="date" data-action="field" data-prop="d0" value="${m.d?.[0] || ''}">
-        </div>
-        <div class="form-group">
-          <label>Lectura Hasta</label>
-          <input type="date" data-action="field" data-prop="d1" value="${m.d?.[1] || ''}">
-        </div>
-      </div>
+  // 2. Alertas
+  const warningList = getMonthAlerts(K, c);
+  alertsContainer.innerHTML = warningList.map(msg => `
+    <div class="alert-box alert-warning">
+      ${ICONS.alert}
+      <div><b>Alerta:</b> ${msg}</div>
     </div>
+  `).join('');
 
-    <!-- TABLA COMPACTA EN ESCRITORIO / CARDS EN CELULAR (SIN SCROLL HORIZONTAL) -->
-    <div class="card">
-      <div class="card-header">
-        <h3 class="card-title">${ICONS.chart} Lecturas y Cálculo por Departamento</h3>
-      </div>
+  // 3. Sub-Tab 1: Lecturas
+  $('#receipts-title').textContent = `Recibos Generales · ${monthName} ${yearStr}`;
+  $('#field-w').value = m.w ?? '';
+  $('#field-e').value = m.e ?? '';
+  $('#field-d0').value = m.d?.[0] || '';
+  $('#field-d1').value = m.d?.[1] || '';
 
-      <!-- 1. VISTA DE ESCRITORIO (7 Columnas compactas, 100% ancho sin scroll) -->
-      <table class="compact-table desktop-only-table">
-        <thead>
-          <tr>
-            <th>Depto</th>
-            <th style="text-align:center;">Lecturas (Ant. → Act.)</th>
-            <th>Consumo</th>
-            <th>Agua (S/)</th>
-            <th>Luz Común (S/)</th>
-            <th>Extras (S/)</th>
-            <th>A Pagar (S/)</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${APTS.map(apt => {
-            const r = m.r[apt] || { t: 'i', wt: 0.5 };
-            const hasMeter = r.t === 'm';
+  const weightOpts = [
+    ['1', '1.0'],
+    ['0.5', '0.5'],
+    ['0.3333333333', '1/3'],
+    ['0', '0']
+  ];
 
-            return `<tr>
-              <td>
-                <div style="display:flex;align-items:center;gap:8px;">
-                  <b style="font-size:15px;color:var(--primary);">${apt}</b>
-                  <select data-action="set-type" data-apt="${apt}" class="input-compact" style="font-size:11px;padding:2px 6px;">
-                    <option value="m" ${hasMeter ? 'selected' : ''}>Medidor</option>
-                    <option value="i" ${r.t === 'i' ? 'selected' : ''}>Indep.</option>
-                    <option value="n" ${r.t === 'n' ? 'selected' : ''}>No usa</option>
-                  </select>
-                </div>
-              </td>
-              <td style="text-align:center;">
-                ${hasMeter ? `
-                  <div style="display:inline-flex;align-items:center;gap:4px;">
-                    <input type="number" class="input-compact" style="width:85px;text-align:right;" data-action="set-reading" data-apt="${apt}" data-key="p" value="${r.p ?? ''}" placeholder="Ant">
-                    <span style="color:var(--text-muted);font-weight:700;">→</span>
-                    <input type="number" class="input-compact" style="width:85px;text-align:right;" data-action="set-reading" data-apt="${apt}" data-key="c" value="${r.c ?? ''}" placeholder="Act">
-                  </div>
-                ` : `<span style="color:var(--text-muted);font-size:12px;">Independizado</span>`}
-              </td>
-              <td>
-                ${hasMeter ? `<b>${fNum(c[apt].cons)} L</b>` : '<span style="color:var(--text-muted)">—</span>'}
-              </td>
-              <td style="color:var(--water-color);font-weight:600;">
-                ${f2(c[apt].w)}
-              </td>
-              <td>
-                <div style="display:inline-flex;align-items:center;gap:4px;justify-content:flex-end;">
-                  <span style="color:var(--light-color);font-weight:600;">${f2(c[apt].e)}</span>
-                  <select data-action="set-weight" data-apt="${apt}" class="input-compact" style="font-size:11px;padding:2px 4px;" title="Parte asignada de luz común">
-                    ${weightOpts.map(([v, l]) => `<option value="${v}" ${Math.abs((r.wt ?? 1) - v) < 1e-5 ? 'selected' : ''}>${l}</option>`).join('')}
-                  </select>
-                </div>
-              </td>
-              <td style="color:var(--extra-color);font-weight:600;">
-                ${f2(c[apt].x)}
-              </td>
-              <td>
-                <b style="font-size:15px;color:var(--text-main);">${f2(c[apt].pay)}</b>
-              </td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-        <tfoot>
-          <tr>
-            <td colspan="3" style="text-align:left;">TOTALES</td>
-            <td style="color:var(--water-color);">${f2(totalAgua)}</td>
-            <td style="color:var(--light-color);">${f2(totalLuz)}</td>
-            <td style="color:var(--extra-color);">${f2(totalExtras)}</td>
-            <td style="font-size:15px;">S/ ${f2(totalPagar)}</td>
-          </tr>
-        </tfoot>
-      </table>
-
-      <!-- 2. VISTA DE CELULAR (Cards verticales táctiles, cero scroll horizontal) -->
-      <div class="mobile-cards-list">
+  $('#readings-table-container').innerHTML = `
+    <!-- Tabla de escritorio (7 columnas, sin scroll horizontal) -->
+    <table class="compact-table desktop-only-table">
+      <thead>
+        <tr>
+          <th>Depto</th>
+          <th style="text-align:center;">Lecturas (Ant. → Act.)</th>
+          <th>Consumo</th>
+          <th>Agua (S/)</th>
+          <th>Luz Común (S/)</th>
+          <th>Extras (S/)</th>
+          <th>A Pagar (S/)</th>
+        </tr>
+      </thead>
+      <tbody>
         ${APTS.map(apt => {
           const r = m.r[apt] || { t: 'i', wt: 0.5 };
           const hasMeter = r.t === 'm';
 
-          return `
-            <div class="apt-mobile-card">
-              <div class="apt-mobile-head">
-                <div>
-                  <span class="apt-mobile-num">Dpto ${apt}</span>
-                  <select data-action="set-type" data-apt="${apt}" class="input-compact" style="margin-left:8px;font-size:11px;">
-                    <option value="m" ${hasMeter ? 'selected' : ''}>Con Medidor</option>
-                    <option value="i" ${r.t === 'i' ? 'selected' : ''}>Independiente</option>
-                    <option value="n" ${r.t === 'n' ? 'selected' : ''}>No usa</option>
-                  </select>
-                </div>
-                <div class="apt-mobile-pay">
-                  <div style="font-size:11px;color:var(--text-muted);font-weight:400;">A PAGAR</div>
-                  S/ ${f2(c[apt].pay)}
-                </div>
+          return `<tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <b style="font-size:15px;color:var(--primary);">${apt}</b>
+                <select data-action="set-type" data-apt="${apt}" class="input-compact" style="font-size:11px;padding:2px 6px;">
+                  <option value="m" ${hasMeter ? 'selected' : ''}>Medidor</option>
+                  <option value="i" ${r.t === 'i' ? 'selected' : ''}>Indep.</option>
+                  <option value="n" ${r.t === 'n' ? 'selected' : ''}>No usa</option>
+                </select>
               </div>
-
+            </td>
+            <td style="text-align:center;">
               ${hasMeter ? `
-                <div class="apt-mobile-grid">
-                  <label>
-                    Lectura Anterior:
-                    <input type="number" inputmode="numeric" data-action="set-reading" data-apt="${apt}" data-key="p" value="${r.p ?? ''}">
-                  </label>
-                  <label>
-                    Lectura Actual:
-                    <input type="number" inputmode="numeric" data-action="set-reading" data-apt="${apt}" data-key="c" value="${r.c ?? ''}">
-                  </label>
+                <div style="display:inline-flex;align-items:center;gap:4px;">
+                  <input type="number" class="input-compact" style="width:85px;text-align:right;" data-action="set-reading" data-apt="${apt}" data-key="p" value="${r.p ?? ''}" placeholder="Ant">
+                  <span style="color:var(--text-muted);font-weight:700;">→</span>
+                  <input type="number" class="input-compact" style="width:85px;text-align:right;" data-action="set-reading" data-apt="${apt}" data-key="c" value="${r.c ?? ''}" placeholder="Act">
                 </div>
-              ` : `
-                <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">
-                  Departamento con red de agua independiente.
-                </div>
-              `}
+              ` : `<span style="color:var(--text-muted);font-size:12px;">Independizado</span>`}
+            </td>
+            <td>
+              ${hasMeter ? `<b>${fNum(c[apt].cons)} L</b>` : '<span style="color:var(--text-muted)">—</span>'}
+            </td>
+            <td style="color:var(--water-color);font-weight:600;">${f2(c[apt].w)}</td>
+            <td>
+              <div style="display:inline-flex;align-items:center;gap:4px;justify-content:flex-end;">
+                <span style="color:var(--light-color);font-weight:600;">${f2(c[apt].e)}</span>
+                <select data-action="set-weight" data-apt="${apt}" class="input-compact" style="font-size:11px;padding:2px 4px;">
+                  ${weightOpts.map(([v, l]) => `<option value="${v}" ${Math.abs((r.wt ?? 1) - v) < 1e-5 ? 'selected' : ''}>${l}</option>`).join('')}
+                </select>
+              </div>
+            </td>
+            <td style="color:var(--extra-color);font-weight:600;">${f2(c[apt].x)}</td>
+            <td><b style="font-size:15px;color:var(--text-main);">${f2(c[apt].pay)}</b></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3" style="text-align:left;">TOTALES</td>
+          <td style="color:var(--water-color);">${f2(totalAgua)}</td>
+          <td style="color:var(--light-color);">${f2(totalLuz)}</td>
+          <td style="color:var(--extra-color);">${f2(totalExtras)}</td>
+          <td style="font-size:15px;">S/ ${f2(totalPagar)}</td>
+        </tr>
+      </tfoot>
+    </table>
 
-              <div class="apt-mobile-chips">
-                ${hasMeter ? `<span>Consumo: <b>${fNum(c[apt].cons)} L</b></span>` : ''}
-                <span>Agua: <b style="color:var(--water-color);">S/ ${f2(c[apt].w)}</b></span>
-                <span>Luz: <b style="color:var(--light-color);">S/ ${f2(c[apt].e)}</b></span>
-                ${c[apt].x > 0 ? `<span>Extras: <b style="color:var(--extra-color);">S/ ${f2(c[apt].x)}</b></span>` : ''}
+    <!-- Cards táctiles en celular (sin scroll) -->
+    <div class="mobile-cards-list">
+      ${APTS.map(apt => {
+        const r = m.r[apt] || { t: 'i', wt: 0.5 };
+        const hasMeter = r.t === 'm';
+
+        return `
+          <div class="apt-mobile-card">
+            <div class="apt-mobile-head">
+              <div>
+                <span class="apt-mobile-num">Dpto ${apt}</span>
+                <select data-action="set-type" data-apt="${apt}" class="input-compact" style="margin-left:8px;font-size:11px;">
+                  <option value="m" ${hasMeter ? 'selected' : ''}>Con Medidor</option>
+                  <option value="i" ${r.t === 'i' ? 'selected' : ''}>Independiente</option>
+                  <option value="n" ${r.t === 'n' ? 'selected' : ''}>No usa</option>
+                </select>
+              </div>
+              <div class="apt-mobile-pay">
+                <div style="font-size:11px;color:var(--text-muted);font-weight:400;">A PAGAR</div>
+                S/ ${f2(c[apt].pay)}
               </div>
             </div>
-          `;
-        }).join('')}
-      </div>
 
-      <p style="font-size:12px;color:var(--text-muted);margin-top:12px;">
-        El agua se divide en proporción exacta al consumo medido. La luz común según el peso acordado.
-      </p>
-    </div>
+            ${hasMeter ? `
+              <div class="apt-mobile-grid">
+                <label>
+                  Lectura Anterior:
+                  <input type="number" inputmode="numeric" data-action="set-reading" data-apt="${apt}" data-key="p" value="${r.p ?? ''}">
+                </label>
+                <label>
+                  Lectura Actual:
+                  <input type="number" inputmode="numeric" data-action="set-reading" data-apt="${apt}" data-key="c" value="${r.c ?? ''}">
+                </label>
+              </div>
+            ` : `
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">
+                Departamento con red de agua independiente.
+              </div>
+            `}
 
-    <!-- Aportes y Cargos Especiales -->
-    <div class="card">
-      <div class="card-header">
-        <h3 class="card-title">${ICONS.tools} Aportes y Mantenimiento (Tanque, Bombas, Luces)</h3>
-      </div>
-
-      ${admin ? `
-        <!-- Presets de adición rápida -->
-        <div class="presets-bar noprint">
-          <span class="presets-title">Agregar rápido:</span>
-          <button class="btn btn-sm" data-action="add-preset" data-name="Limpieza de cisterna y tanque" data-amt="240" data-per="split">
-            ${ICONS.plus} Limpieza de Tanque (S/ 240)
-          </button>
-          <button class="btn btn-sm" data-action="add-preset" data-name="Mantenimiento bomba de agua" data-amt="180" data-per="split">
-            ${ICONS.plus} Mantenimiento Bomba (S/ 180)
-          </button>
-          <button class="btn btn-sm" data-action="add-preset" data-name="Foco y repuestos luz común" data-amt="30" data-per="split">
-            ${ICONS.plus} Focos / Pasadizo (S/ 30)
-          </button>
-          <button class="btn btn-sm" data-action="add-preset" data-name="Aporte extraordinario de mantenimiento" data-amt="50" data-per="each">
-            ${ICONS.plus} Aporte Extra (S/ 50 c/u)
-          </button>
-          <button class="btn btn-sm btn-primary" data-action="add-custom-charge">
-            ${ICONS.plus} Otro Concepto
-          </button>
-        </div>
-      ` : ''}
-
-      <!-- Lista de Cargos Registrados -->
-      ${(m.x && m.x.length > 0) ? m.x.map((cargo, idx) => `
-        <div class="charge-row">
-          <input type="text" data-action="charge-name" data-idx="${idx}" value="${cargo.n || ''}" placeholder="Concepto (ej. Limpieza de tanque)" style="flex:2;min-width:180px;">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span style="font-size:12px;font-weight:600;color:var(--text-muted);">S/</span>
-            <input type="number" step="0.01" data-action="charge-amt" data-idx="${idx}" value="${cargo.amt ?? 0}" style="width:110px;">
+            <div class="apt-mobile-chips">
+              ${hasMeter ? `<span>Consumo: <b>${fNum(c[apt].cons)} L</b></span>` : ''}
+              <span>Agua: <b style="color:var(--water-color);">S/ ${f2(c[apt].w)}</b></span>
+              <span>Luz: <b style="color:var(--light-color);">S/ ${f2(c[apt].e)}</b></span>
+              ${c[apt].x > 0 ? `<span>Extras: <b style="color:var(--extra-color);">S/ ${f2(c[apt].x)}</b></span>` : ''}
+            </div>
           </div>
-          <select data-action="charge-per" data-idx="${idx}" style="font-size:12px;">
-            <option value="split" ${cargo.per === 'split' ? 'selected' : ''}>Repartir total entre elegidos</option>
-            <option value="each" ${cargo.per === 'each' ? 'selected' : ''}>Monto fijo a cada elegido</option>
-          </select>
-          <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;color:var(--text-muted);" title="Marca esta opción si este gasto ya vino cobrado dentro del recibo de agua">
-            <input type="checkbox" data-action="charge-ded" data-idx="${idx}" ${cargo.ded ? 'checked' : ''}>
-            Deducir de recibo agua
+        `;
+      }).join('')}
+    </div>
+  `;
+
+  // 4. Sub-Tab 2: Aportes y Mantenimiento
+  $('#charges-presets-container').innerHTML = admin ? `
+    <div class="presets-bar noprint">
+      <span class="presets-title">Agregar rápido:</span>
+      <button class="btn btn-sm" data-action="add-preset" data-name="Limpieza de cisterna y tanque" data-amt="240" data-per="split">
+        ${ICONS.plus} Limpieza de Tanque (S/ 240)
+      </button>
+      <button class="btn btn-sm" data-action="add-preset" data-name="Mantenimiento bomba de agua" data-amt="180" data-per="split">
+        ${ICONS.plus} Mantenimiento Bomba (S/ 180)
+      </button>
+      <button class="btn btn-sm" data-action="add-preset" data-name="Foco y repuestos luz común" data-amt="30" data-per="split">
+        ${ICONS.plus} Focos / Pasadizo (S/ 30)
+      </button>
+      <button class="btn btn-sm" data-action="add-preset" data-name="Aporte extraordinario de mantenimiento" data-amt="50" data-per="each">
+        ${ICONS.plus} Aporte Extra (S/ 50 c/u)
+      </button>
+      <button class="btn btn-sm btn-primary" data-action="add-custom-charge">
+        ${ICONS.plus} Otro Concepto
+      </button>
+    </div>
+  ` : '';
+
+  $('#charges-list-container').innerHTML = (m.x && m.x.length > 0) ? m.x.map((cargo, idx) => `
+    <div class="charge-row">
+      <input type="text" data-action="charge-name" data-idx="${idx}" value="${cargo.n || ''}" placeholder="Concepto (ej. Limpieza de tanque)" style="flex:2;min-width:180px;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:12px;font-weight:600;color:var(--text-muted);">S/</span>
+        <input type="number" step="0.01" data-action="charge-amt" data-idx="${idx}" value="${cargo.amt ?? 0}" style="width:110px;">
+      </div>
+      <select data-action="charge-per" data-idx="${idx}" style="font-size:12px;">
+        <option value="split" ${cargo.per === 'split' ? 'selected' : ''}>Repartir total entre elegidos</option>
+        <option value="each" ${cargo.per === 'each' ? 'selected' : ''}>Monto fijo a cada elegido</option>
+      </select>
+      <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;color:var(--text-muted);" title="Marca esta opción si este gasto ya vino cobrado dentro del recibo de agua">
+        <input type="checkbox" data-action="charge-ded" data-idx="${idx}" ${cargo.ded ? 'checked' : ''}>
+        Deducir de recibo agua
+      </label>
+      <div class="charge-apts">
+        ${APTS.map(apt => `
+          <label class="apt-check">
+            <input type="checkbox" data-action="charge-apt-toggle" data-idx="${idx}" data-apt="${apt}" ${(cargo.apts || []).includes(apt) ? 'checked' : ''}>
+            ${apt}
           </label>
-          <div class="charge-apts">
-            ${APTS.map(apt => `
-              <label class="apt-check">
-                <input type="checkbox" data-action="charge-apt-toggle" data-idx="${idx}" data-apt="${apt}" ${(cargo.apts || []).includes(apt) ? 'checked' : ''}>
-                ${apt}
-              </label>
-            `).join('')}
-          </div>
-          ${admin ? `
-            <button class="btn btn-danger btn-sm" data-action="delete-charge" data-idx="${idx}" title="Eliminar cargo">
-              ${ICONS.trash}
-            </button>
-          ` : ''}
-        </div>
-      `).join('') : `
-        <p style="color:var(--text-muted);font-style:italic;padding:10px 0;font-size:13px;">
-          No hay cargos adicionales en este mes.
-        </p>
-      `}
-    </div>
-
-    <!-- Control de Cobranza y Saldos -->
-    <div class="card">
-      <div class="card-header">
-        <h3 class="card-title">${ICONS.cash} Control de Cobranza y Pagos</h3>
+        `).join('')}
       </div>
+      ${admin ? `
+        <button class="btn btn-danger btn-sm" data-action="delete-charge" data-idx="${idx}" title="Eliminar cargo">
+          ${ICONS.trash}
+        </button>
+      ` : ''}
+    </div>
+  `).join('') : `
+    <p style="color:var(--text-muted);font-style:italic;padding:10px 0;font-size:13px;">
+      No hay cargos adicionales en este mes. Usa los botones superiores para registrar limpieza de tanque o cuotas extraordinarias.
+    </p>
+  `;
 
-      <!-- Tabla en escritorio -->
-      <table class="compact-table desktop-only-table">
-        <thead>
-          <tr>
-            <th>Depto</th>
-            <th>Deuda Anterior</th>
-            <th>A Pagar Mes</th>
-            <th>Monto Cobrado (S/)</th>
-            <th>Saldo Resultante</th>
-            <th style="text-align:center;">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${APTS.map(apt => {
-            const row = c[apt];
-            const paidVal = m.pg?.[apt] ?? '';
-            let tagHtml = `<span class="status-tag al-dia">${ICONS.check} Al día</span>`;
-            if (row.bal > 0.05) {
-              tagHtml = `<span class="status-tag debe">Debe S/ ${f2(row.bal)}</span>`;
-            } else if (row.bal < -0.05) {
-              tagHtml = `<span class="status-tag favor">A favor S/ ${f2(-row.bal)}</span>`;
-            }
-
-            return `<tr>
-              <td><b style="font-size:15px;">${apt}</b></td>
-              <td>${f2(row.pd)}</td>
-              <td><b>${f2(row.pay)}</b></td>
-              <td>
-                <input type="number" step="0.01" class="input-compact" style="width:105px;" data-action="set-paid" data-apt="${apt}" value="${paidVal}" placeholder="0.00">
-              </td>
-              <td>${tagHtml}</td>
-              <td style="text-align:center;">
-                <div style="display:inline-flex;gap:6px;">
-                  ${admin ? `
-                    <button class="btn btn-sm" data-action="mark-full-paid" data-apt="${apt}" data-val="${row.pay + row.pd}">
-                      Pagar Todo
-                    </button>
-                  ` : ''}
-                  <button class="btn btn-sm" data-action="go-receipt" data-apt="${apt}">
-                    ${ICONS.receipt} Recibo
-                  </button>
-                </div>
-              </td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>
-
-      <!-- Cards en Celular -->
-      <div class="mobile-cards-list">
+  // 5. Sub-Tab 3: Cobranza y Saldos
+  $('#payments-table-container').innerHTML = `
+    <!-- Tabla de cobranza escritorio -->
+    <table class="compact-table desktop-only-table">
+      <thead>
+        <tr>
+          <th>Depto</th>
+          <th>Deuda Anterior</th>
+          <th>A Pagar Mes</th>
+          <th>Monto Cobrado (S/)</th>
+          <th>Saldo Resultante</th>
+          <th style="text-align:center;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
         ${APTS.map(apt => {
           const row = c[apt];
           const paidVal = m.pg?.[apt] ?? '';
@@ -601,59 +546,101 @@ function vMonth() {
             tagHtml = `<span class="status-tag favor">A favor S/ ${f2(-row.bal)}</span>`;
           }
 
-          return `
-            <div class="apt-mobile-card">
-              <div class="apt-mobile-head">
-                <span class="apt-mobile-num">Dpto ${apt}</span>
-                ${tagHtml}
-              </div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;">
-                <span>A Pagar: <b>S/ ${f2(row.pay)}</b></span>
-                <span>Deuda Prev: <b>S/ ${f2(row.pd)}</b></span>
-              </div>
-              <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
-                <label style="font-size:12px;font-weight:600;color:var(--text-muted);flex-shrink:0;">Monto Cobrado:</label>
-                <input type="number" step="0.01" inputmode="decimal" data-action="set-paid" data-apt="${apt}" value="${paidVal}" placeholder="0.00" style="flex:1;">
-              </div>
-              <div style="display:flex;gap:8px;">
+          return `<tr>
+            <td><b style="font-size:15px;">${apt}</b></td>
+            <td>${f2(row.pd)}</td>
+            <td><b>${f2(row.pay)}</b></td>
+            <td>
+              <input type="number" step="0.01" class="input-compact" style="width:105px;" data-action="set-paid" data-apt="${apt}" value="${paidVal}" placeholder="0.00">
+            </td>
+            <td>${tagHtml}</td>
+            <td style="text-align:center;">
+              <div style="display:inline-flex;gap:6px;">
                 ${admin ? `
-                  <button class="btn btn-sm" data-action="mark-full-paid" data-apt="${apt}" data-val="${row.pay + row.pd}" style="flex:1;">
+                  <button class="btn btn-sm" data-action="mark-full-paid" data-apt="${apt}" data-val="${row.pay + row.pd}">
                     Pagar Todo
                   </button>
                 ` : ''}
-                <button class="btn btn-sm btn-primary" data-action="go-receipt" data-apt="${apt}" style="flex:1;">
+                <button class="btn btn-sm" data-action="go-receipt" data-apt="${apt}">
                   ${ICONS.receipt} Recibo
                 </button>
               </div>
-            </div>
-          `;
+            </td>
+          </tr>`;
         }).join('')}
-      </div>
+      </tbody>
+    </table>
 
-      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;margin-top:16px;gap:12px;" class="noprint">
-        ${admin ? `
-          <label style="display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer;">
-            <input type="checkbox" data-action="toggle-carry" ${m.tr ? 'checked' : ''}>
-            Arrastrar automáticamente saldos pendientes al siguiente mes
-          </label>
-        ` : '<div></div>'}
-        <button class="btn" onclick="window.print()">
-          ${ICONS.print} Imprimir / PDF del Mes
-        </button>
-      </div>
+    <!-- Cards en Celular -->
+    <div class="mobile-cards-list">
+      ${APTS.map(apt => {
+        const row = c[apt];
+        const paidVal = m.pg?.[apt] ?? '';
+        let tagHtml = `<span class="status-tag al-dia">${ICONS.check} Al día</span>`;
+        if (row.bal > 0.05) {
+          tagHtml = `<span class="status-tag debe">Debe S/ ${f2(row.bal)}</span>`;
+        } else if (row.bal < -0.05) {
+          tagHtml = `<span class="status-tag favor">A favor S/ ${f2(-row.bal)}</span>`;
+        }
 
-      <div style="margin-top:12px;" class="noprint">
-        <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:5px;">Notas del mes:</label>
-        <input type="text" data-action="set-note" value="${m.n || ''}" placeholder="Ej. Depósito realizado en cuenta BCP..." style="width:100%;">
-      </div>
+        return `
+          <div class="apt-mobile-card">
+            <div class="apt-mobile-head">
+              <span class="apt-mobile-num">Dpto ${apt}</span>
+              ${tagHtml}
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;">
+              <span>A Pagar: <b>S/ ${f2(row.pay)}</b></span>
+              <span>Deuda Prev: <b>S/ ${f2(row.pd)}</b></span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+              <label style="font-size:12px;font-weight:600;color:var(--text-muted);flex-shrink:0;">Monto Cobrado:</label>
+              <input type="number" step="0.01" inputmode="decimal" data-action="set-paid" data-apt="${apt}" value="${paidVal}" placeholder="0.00" style="flex:1;">
+            </div>
+            <div style="display:flex;gap:8px;">
+              ${admin ? `
+                <button class="btn btn-sm" data-action="mark-full-paid" data-apt="${apt}" data-val="${row.pay + row.pd}" style="flex:1;">
+                  Pagar Todo
+                </button>
+              ` : ''}
+              <button class="btn btn-sm btn-primary" data-action="go-receipt" data-apt="${apt}" style="flex:1;">
+                ${ICONS.receipt} Recibo
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('')}
     </div>
   `;
+
+  $('#payments-footer-container').innerHTML = `
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;margin-top:16px;gap:12px;" class="noprint">
+      ${admin ? `
+        <label style="display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer;">
+          <input type="checkbox" data-action="toggle-carry" ${m.tr ? 'checked' : ''}>
+          Arrastrar automáticamente saldos pendientes al siguiente mes
+        </label>
+      ` : '<div></div>'}
+      <button class="btn" onclick="window.print()">
+        ${ICONS.print} Imprimir / PDF del Mes
+      </button>
+    </div>
+    <div style="margin-top:12px;" class="noprint">
+      <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:5px;">Notas del mes:</label>
+      <input type="text" data-action="set-note" value="${m.n || ''}" placeholder="Ej. Depósito realizado en cuenta BCP..." style="width:100%;">
+    </div>
+  `;
+
+  switchSubtab(ACTIVE_SUBTAB);
 }
 
 /**
- * Vista de Resumen Anual
+ * Renderiza la vista de Resumen Anual
  */
-function vYear() {
+function renderYearView() {
+  const container = $('#view-year');
+  if (!container) return;
+
   const rows = [];
   let totW = 0, totE = 0, totX = 0, count = 0;
   const matrix = {};
@@ -706,7 +693,7 @@ function vYear() {
   });
   svg += `</svg>`;
 
-  return `
+  container.innerHTML = `
     <div class="kpi-grid">
       <div class="kpi-card kpi-total">
         <div class="kpi-label">${ICONS.chart} Total General ${Y}</div>
@@ -796,21 +783,24 @@ function vYear() {
 }
 
 /**
- * Vista de Recibo Individual y WhatsApp
+ * Renderiza la vista de Recibos para WhatsApp
  */
-function vReceipt() {
+function renderReceiptView() {
+  const container = $('#view-receipt');
+  if (!container) return;
+
   const m = S.months[K];
   const admin = isAdmin();
 
   if (!m) {
-    return `
+    container.innerHTML = `
       <div class="card" style="text-align:center;padding:40px;">
         <h3>No hay datos en el mes seleccionado (${K})</h3>
         <p style="color:var(--text-muted)">Selecciona o registra el mes en Control Mensual.</p>
       </div>`;
+    return;
   }
 
-  // Si no es admin y tiene depto asignado, forzar a su propio depto
   if (!admin && CURRENT_USER.apt && CURRENT_USER.apt !== 'Todos') {
     SELECTED_APT = CURRENT_USER.apt;
   }
@@ -881,7 +871,7 @@ function vReceipt() {
   waLines.push(`\nMuchas gracias por su puntual apoyo.`);
   const waText = waLines.join('\n');
 
-  return `
+  container.innerHTML = `
     <div class="card">
       <div class="card-header">
         <h3 class="card-title">${ICONS.receipt} Recibo de Departamento</h3>
@@ -941,23 +931,24 @@ function vReceipt() {
 }
 
 /**
- * Vista de Gestión de Usuarios por DNI (Base de datos en Google Sheets)
+ * Renderiza la vista de Gestión de Usuarios
  */
-function vUsers() {
+function renderUsersView() {
+  const container = $('#view-users');
+  if (!container) return;
+
   const users = S.users || [];
 
-  return `
+  container.innerHTML = `
     <div class="card">
       <div class="card-header">
         <h3 class="card-title">${ICONS.users} Gestión de Usuarios y Accesos por DNI</h3>
-        <span class="badge badge-server">Base de Datos: Pestaña "Usuarios" en Google Sheets</span>
+        <span class="badge badge-server">Pestaña "Usuarios" en Google Sheets</span>
       </div>
       <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">
-        Agrega a los propietarios o inquilinos por su DNI para que puedan ingresar al portal desde cualquier celular o PC y ver sus recibos.
-        También puedes dar de baja o activar usuarios cuando se muden.
+        Registra a los inquilinos para que puedan ingresar al enlace de GitHub Pages con su DNI y ver sus recibos en línea.
       </p>
 
-      <!-- Formulario para agregar usuario -->
       <form id="addUserForm" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:12px;background:var(--bg-subtle);padding:14px;border-radius:var(--radius-md);margin-bottom:20px;align-items:end;">
         <div>
           <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px;">DNI (8 DÍGITOS)</label>
@@ -988,7 +979,6 @@ function vUsers() {
         </div>
       </form>
 
-      <!-- Tabla de usuarios -->
       <div style="overflow-x:auto;">
         <table class="compact-table" style="min-width:650px;">
           <thead>
@@ -1028,7 +1018,7 @@ function vUsers() {
                       <button class="btn btn-sm ${isActive ? 'btn-danger' : 'btn-success'}" data-action="toggle-user-status" data-idx="${idx}">
                         ${isActive ? 'Dar de Baja' : 'Activar'}
                       </button>
-                      <button class="btn btn-sm btn-danger" data-action="delete-user" data-idx="${idx}" title="Eliminar de la lista">
+                      <button class="btn btn-sm btn-danger" data-action="delete-user" data-idx="${idx}" title="Eliminar">
                         ${ICONS.trash}
                       </button>
                     </div>
@@ -1044,12 +1034,15 @@ function vUsers() {
 }
 
 /**
- * Vista de Configuración y Google Sheets
+ * Renderiza la vista de Configuración y Google Drive
  */
-function vCfg() {
+function renderCfgView() {
+  const container = $('#view-cfg');
+  if (!container) return;
+
   const hasSheets = !!S.cfg.sheetsUrl;
 
-  return `
+  container.innerHTML = `
     <div class="card" style="border-left: 4px solid var(--success);">
       <div class="card-header">
         <h3 class="card-title">${ICONS.cloud} Sincronización con Google Drive (Google Sheets)</h3>
@@ -1207,7 +1200,6 @@ function updateHeaderBar() {
 }
 
 function applyLockState() {
-  if (V === 'year' || V === 'users') return;
   const admin = isAdmin();
   const locked = !admin || !EDIT;
 
@@ -1228,7 +1220,7 @@ function applyLockState() {
 // ==========================================
 
 document.addEventListener('click', async e => {
-  const target = e.target.closest('[data-action], [data-v], #btnEdit, #btnSave, #btnCancel, #btnCopyWa, #btnManualSyncSheets, #btnLogout');
+  const target = e.target.closest('[data-action], [data-v], [data-subtab], #btnEdit, #btnSave, #btnCancel, #btnCopyWa, #btnManualSyncSheets, #btnLogout');
   if (!target) return;
 
   if (target.id === 'btnLogout') {
@@ -1236,9 +1228,15 @@ document.addEventListener('click', async e => {
     return;
   }
 
+  // Cambio de pestañas principales (Mes, Año, Recibos, etc.)
   if (target.dataset.v) {
-    V = target.dataset.v;
-    render();
+    switchView(target.dataset.v);
+    return;
+  }
+
+  // Cambio de sub-pestañas internas del mes
+  if (target.dataset.subtab) {
+    switchSubtab(target.dataset.subtab);
     return;
   }
 
@@ -1321,13 +1319,12 @@ document.addEventListener('click', async e => {
 
   else if (action === 'select-receipt-apt') {
     SELECTED_APT = target.dataset.apt;
-    render();
+    renderReceiptView();
   }
 
   else if (action === 'go-receipt') {
     SELECTED_APT = target.dataset.apt;
-    V = 'receipt';
-    render();
+    switchView('receipt');
   }
 
   else if (action === 'toggle-user-status') {
@@ -1336,7 +1333,7 @@ document.addEventListener('click', async e => {
       S.users[idx].status = S.users[idx].status === 'Inactivo' ? 'Activo' : 'Inactivo';
       DIRTY = true;
       toast(`Usuario ${S.users[idx].nombre} ahora está ${S.users[idx].status}. Pulsa "Guardar" para sincronizar con Drive.`);
-      render();
+      renderUsersView();
     }
   }
 
@@ -1347,7 +1344,7 @@ document.addEventListener('click', async e => {
         S.users.splice(idx, 1);
         DIRTY = true;
         toast('Usuario eliminado. Recuerda pulsar "Guardar" para actualizar Google Sheets.');
-        render();
+        renderUsersView();
       }
     }
   }
@@ -1391,7 +1388,8 @@ document.addEventListener('click', async e => {
       apts: ['101', '201', '301', '401', '501', '502']
     });
     DIRTY = true;
-    render();
+    renderMonthView();
+    applyLockState();
   }
 
   else if (action === 'add-custom-charge') {
@@ -1404,14 +1402,16 @@ document.addEventListener('click', async e => {
       apts: ['101', '201', '301', '401', '501', '502']
     });
     DIRTY = true;
-    render();
+    renderMonthView();
+    applyLockState();
   }
 
   else if (action === 'delete-charge') {
     if (!m) return;
     m.x.splice(+target.dataset.idx, 1);
     DIRTY = true;
-    render();
+    renderMonthView();
+    applyLockState();
   }
 
   else if (action === 'mark-full-paid') {
@@ -1419,7 +1419,8 @@ document.addEventListener('click', async e => {
     m.pg = m.pg || {};
     m.pg[target.dataset.apt] = +target.dataset.val;
     DIRTY = true;
-    render();
+    renderMonthView();
+    applyLockState();
   }
 
   else if (action === 'export-csv') {
@@ -1459,7 +1460,6 @@ document.addEventListener('click', async e => {
   }
 });
 
-// Enviar formulario de nuevo usuario
 document.addEventListener('submit', e => {
   if (e.target && e.target.id === 'addUserForm') {
     e.preventDefault();
@@ -1478,17 +1478,10 @@ document.addEventListener('submit', e => {
       return;
     }
 
-    S.users.push({
-      dni,
-      nombre,
-      apt,
-      role,
-      status: 'Activo'
-    });
-
+    S.users.push({ dni, nombre, apt, role, status: 'Activo' });
     DIRTY = true;
-    toast(`✓ Usuario ${nombre} (${dni}) agregado. Recuerda pulsar "Guardar" para sincronizar con Google Sheets.`, 'success');
-    render();
+    toast(`Usuario ${nombre} (${dni}) agregado. Pulsa "Guardar" para sincronizar.`, 'success');
+    renderUsersView();
   }
 });
 
@@ -1599,7 +1592,10 @@ document.addEventListener('change', e => {
   }
 
   DIRTY = true;
-  render();
+  if (V === 'month') {
+    renderMonthView();
+    applyLockState();
+  }
 });
 
 window.addEventListener('beforeunload', e => {
@@ -1633,12 +1629,10 @@ async function initApp() {
   }
   Y = +K.slice(0, 4);
 
-  // Comprobar sesión de usuario en localStorage
   try {
     const saved = localStorage.getItem('sanmartin_session');
     if (saved) {
       const parsed = JSON.parse(saved);
-      // Validar si el usuario sigue en la lista y activo
       const validUser = S.users.find(u => String(u.dni).trim() === String(parsed.dni).trim() && u.status !== 'Inactivo');
       if (validUser) {
         CURRENT_USER = validUser;
