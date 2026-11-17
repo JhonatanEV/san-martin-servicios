@@ -200,14 +200,180 @@ nav button.active svg {
   stroke: #ffffff;
 }
 
-/* Acciones en Header */
+/* Acciones en Header (Vuetify UIX) */
 #header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.header-actions-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.header-meta-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.header-btn-group {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-/* Badges de estado */
+.header-user-group {
+  display: flex;
+  align-items: center;
+}
+
+/* Chips estilo Vuetify */
+.v-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.v-chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: currentColor;
+  flex-shrink: 0;
+}
+
+.v-chip-dot.pulse {
+  animation: v-chip-pulse 2s infinite;
+}
+
+@keyframes v-chip-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.7); }
+  70% { box-shadow: 0 0 0 6px rgba(46, 125, 50, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(46, 125, 50, 0); }
+}
+
+.v-chip-online {
+  background-color: var(--success-bg);
+  color: var(--success);
+  border-color: rgba(46, 125, 50, 0.25);
+}
+
+.v-chip-server {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border-color: rgba(3, 105, 161, 0.25);
+}
+
+.v-chip-static {
+  background-color: var(--bg-subtle);
+  color: var(--text-muted);
+  border-color: var(--border-color);
+}
+
+.v-chip-syncing {
+  background-color: #e3f2fd;
+  color: #1565c0;
+  border-color: rgba(21, 101, 192, 0.3);
+}
+
+.v-chip-warning {
+  background-color: var(--warning-bg);
+  color: var(--warning);
+  border-color: rgba(239, 108, 0, 0.3);
+}
+
+.v-chip-spinner {
+  width: 10px;
+  height: 10px;
+  border: 2px solid rgba(21, 101, 192, 0.3);
+  border-top-color: #1565c0;
+  border-radius: 50%;
+  animation: v-spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+/* User Profile Pill estilo Vuetify */
+.v-user-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 6px 3px 10px;
+  border-radius: var(--radius-full);
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  font-size: 12px;
+}
+
+.v-user-pill.admin {
+  background-color: #eff6ff;
+  border-color: rgba(29, 78, 216, 0.25);
+}
+
+.v-user-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.v-user-meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  text-align: left;
+}
+
+.v-user-name {
+  font-weight: 700;
+  color: var(--text-main);
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.v-user-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.v-btn-logout {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.v-btn-logout:hover {
+  background-color: rgba(198, 40, 40, 0.1);
+  color: var(--danger);
+}
+
+/* Badges heredados */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -306,8 +472,35 @@ nav button.active svg {
 }
 
 .btn-success:hover:not(:disabled) {
-  background-color: #047857;
+  background-color: #1b5e20;
+  border-color: #1b5e20;
   color: #ffffff;
+}
+
+.btn-elevated {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.btn-elevated:hover:not(:disabled) {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.16), 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.btn-elevated:active:not(:disabled) {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transform: translateY(0);
+}
+
+.btn-outlined {
+  background-color: transparent;
+  color: var(--text-muted);
+  border-color: var(--border-color);
+}
+
+.btn-outlined:hover:not(:disabled) {
+  background-color: var(--bg-subtle);
+  color: var(--text-main);
+  border-color: var(--text-muted);
 }
 
 .btn-danger {
@@ -1018,6 +1211,122 @@ input:disabled, select:disabled, textarea:disabled {
   background-color: #eff6ff;
   color: #1d4ed8;
   border-color: rgba(29, 78, 216, 0.2);
+}
+
+/* ==========================================
+   SINCRONIZACIÓN Y OVERLAY DE CARGA (VUETIFY)
+   ========================================== */
+.sync-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  user-select: none;
+}
+
+.sync-modal-card {
+  background-color: var(--bg-card);
+  border-radius: 16px;
+  padding: 32px 26px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color);
+  animation: v-dialog-enter 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes v-dialog-enter {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.sync-icon-box {
+  width: 68px;
+  height: 68px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background-color: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.sync-spin-icon {
+  animation: v-pulse-icon 2s ease-in-out infinite;
+}
+
+@keyframes v-pulse-icon {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+
+.sync-icon-ring {
+  position: absolute;
+  inset: -4px;
+  border: 3px solid transparent;
+  border-top-color: var(--primary);
+  border-right-color: var(--primary);
+  border-radius: 50%;
+  animation: v-spin 0.9s linear infinite;
+}
+
+@keyframes v-spin {
+  100% { transform: rotate(360deg); }
+}
+
+.sync-title {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+
+.sync-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 16px;
+  line-height: 1.45;
+}
+
+.v-progress-linear {
+  height: 5px;
+  width: 100%;
+  background-color: rgba(24, 103, 192, 0.15);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  margin: 18px 0 14px;
+}
+
+.v-progress-linear-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background-color: var(--primary);
+  border-radius: 4px;
+  animation: v-progress-indeterminate 1.6s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+}
+
+@keyframes v-progress-indeterminate {
+  0% { left: -35%; right: 100%; }
+  60% { left: 100%; right: -90%; }
+  100% { left: 100%; right: -90%; }
+}
+
+.sync-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 /* Impresión */

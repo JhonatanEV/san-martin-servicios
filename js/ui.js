@@ -47,8 +47,25 @@ const ICONS = {
   cloud: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>`,
   sync: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>`,
   plus: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`,
-  close: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`
+  close: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
+  logout: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>`
 };
+
+function showSyncOverlay(title = 'Sincronizando con Google Drive', message = 'Conectando con tu hoja de cálculo en la nube...') {
+  const overlay = $('#sync-overlay');
+  if (!overlay) return;
+  const titleEl = $('#sync-overlay-title');
+  const msgEl = $('#sync-overlay-msg');
+  if (titleEl) titleEl.textContent = title;
+  if (msgEl) msgEl.textContent = message;
+  overlay.style.display = 'flex';
+}
+
+function hideSyncOverlay() {
+  const overlay = $('#sync-overlay');
+  if (!overlay) return;
+  overlay.style.display = 'none';
+}
 
 function toast(msg, type = 'normal') {
   const el = $('#toast');
@@ -1159,45 +1176,102 @@ function updateHeaderBar() {
   if (!tb) return;
 
   const admin = isAdmin();
-  const userBadge = CURRENT_USER
-    ? `<span class="user-profile-badge ${admin ? 'admin' : ''}">
-        ${ICONS.user} ${CURRENT_USER.nombre} (${CURRENT_USER.dni})
-       </span>
-       <button class="btn btn-sm" id="btnLogout" title="Cerrar Sesión">Salir</button>`
+
+  // 1. Chip de estado de conexión
+  let statusChip = '';
+  if (Store.isSyncing) {
+    statusChip = `
+      <div class="v-chip v-chip-syncing" title="Sincronización con Google Drive en curso">
+        <span class="v-chip-spinner"></span>
+        <span>Sincronizando...</span>
+      </div>`;
+  } else if (Store.mode === 'server') {
+    statusChip = `
+      <div class="v-chip v-chip-server" title="Conectado al servidor Node.js local">
+        <span class="v-chip-dot"></span>
+        <span>Servidor Activo</span>
+      </div>`;
+  } else if (Store.mode === 'sheets-online') {
+    statusChip = `
+      <div class="v-chip v-chip-online" title="Conectado y sincronizado con Google Sheets en Drive">
+        <span class="v-chip-dot pulse"></span>
+        <span>Drive Online</span>
+      </div>`;
+  } else {
+    statusChip = `
+      <div class="v-chip v-chip-static" title="Modo sin conexión directa">
+        <span class="v-chip-dot"></span>
+        <span>Modo Local</span>
+      </div>`;
+  }
+
+  // 2. Chip de cambios pendientes
+  const dirtyChip = (admin && EDIT && DIRTY)
+    ? `<div class="v-chip v-chip-warning" title="Hay cambios pendientes sin guardar">
+        <span class="v-chip-dot pulse"></span>
+        <span>Sin guardar</span>
+       </div>`
     : '';
 
-  const modeBadge = Store.mode === 'server'
-    ? `<span class="badge badge-server">${ICONS.check} Servidor Activo</span>`
-    : Store.mode === 'sheets-online'
-    ? `<span class="badge badge-server">${ICONS.cloud} En Línea (Drive)</span>`
-    : `<span class="badge badge-static">Modo Estático</span>`;
-
-  const dirtyIndicator = DIRTY
-    ? `<span class="dirty-indicator">Cambios sin guardar</span>`
-    : '';
-
+  // 3. Botones de acción principales
+  let actionButtons = '';
   if (admin) {
     if (EDIT) {
-      tb.innerHTML = `
-        ${modeBadge}
-        ${dirtyIndicator}
-        <button class="btn btn-primary" id="btnSave">${ICONS.save} Guardar</button>
-        <button class="btn" id="btnCancel">${ICONS.close} Cancelar</button>
-        ${userBadge}
+      actionButtons = `
+        <button class="btn btn-success btn-elevated" id="btnSave" title="Guardar cambios y sincronizar con Drive">
+          ${ICONS.save}
+          <span>Guardar</span>
+        </button>
+        <button class="btn btn-outlined" id="btnCancel" title="Descartar cambios">
+          ${ICONS.close}
+          <span>Cancelar</span>
+        </button>
       `;
     } else {
-      tb.innerHTML = `
-        ${modeBadge}
-        <button class="btn btn-primary" id="btnEdit">${ICONS.edit} Editar</button>
-        ${userBadge}
+      actionButtons = `
+        <button class="btn btn-primary btn-elevated" id="btnEdit" title="Activar modo edición para registrar consumos o pagos">
+          ${ICONS.edit}
+          <span>Editar Datos</span>
+        </button>
       `;
     }
-  } else {
-    tb.innerHTML = `
-      ${modeBadge}
-      ${userBadge}
+  }
+
+  // 4. Perfil de Usuario con avatar y salida
+  let userPill = '';
+  if (CURRENT_USER) {
+    const roleLabel = admin ? 'Administrador' : `Dpto ${CURRENT_USER.apt || ''}`;
+    userPill = `
+      <div class="v-user-pill ${admin ? 'admin' : ''}">
+        <div class="v-user-avatar">
+          ${ICONS.user}
+        </div>
+        <div class="v-user-meta">
+          <span class="v-user-name">${CURRENT_USER.nombre}</span>
+          <span class="v-user-sub">${roleLabel}</span>
+        </div>
+        <button class="v-btn-logout" id="btnLogout" title="Cerrar Sesión">
+          ${ICONS.logout}
+          <span class="logout-label">Salir</span>
+        </button>
+      </div>
     `;
   }
+
+  tb.innerHTML = `
+    <div class="header-actions-container">
+      <div class="header-meta-group">
+        ${statusChip}
+        ${dirtyChip}
+      </div>
+      <div class="header-btn-group">
+        ${actionButtons}
+      </div>
+      <div class="header-user-group">
+        ${userPill}
+      </div>
+    </div>
+  `;
 }
 
 function applyLockState() {
@@ -1257,8 +1331,14 @@ document.addEventListener('click', async e => {
     return;
   }
 
-  if (target.id === 'btnSave') {
-    target.disabled = true;
+  if (target.id === 'btnSave' || target.closest('#btnSave')) {
+    const isCloud = Store.mode === 'sheets-online' || (!Store.mode || Store.mode === 'static' || Store.mode === 'cloud');
+    showSyncOverlay(
+      'Guardando Cambios',
+      isCloud
+        ? 'Sincronizando y actualizando tu archivo Excel en Google Drive...'
+        : 'Guardando información en el servidor local...'
+    );
     try {
       const result = await Store.save(S);
       EDIT = false;
@@ -1277,8 +1357,10 @@ document.addEventListener('click', async e => {
       toast(msg, result.sheetsSynced === false ? 'error' : 'success');
     } catch (err) {
       toast('Error al guardar: ' + err.message, 'error');
+    } finally {
+      hideSyncOverlay();
+      render();
     }
-    render();
     return;
   }
 
@@ -1294,17 +1376,19 @@ document.addEventListener('click', async e => {
     return;
   }
 
-  if (target.id === 'btnManualSyncSheets') {
-    target.disabled = true;
-    target.textContent = 'Sincronizando...';
+  if (target.id === 'btnManualSyncSheets' || target.closest('#btnManualSyncSheets')) {
+    showSyncOverlay(
+      'Sincronizando con Google Sheets',
+      'Transmitiendo consumos, recibos y usuarios a tu hoja de cálculo en Drive...'
+    );
     try {
       await Store.syncGoogleSheets(S);
       toast('Sincronización exitosa con tu Google Drive (Google Sheets)', 'success');
     } catch (err) {
       toast('Error al sincronizar con Google Sheets: ' + err.message, 'error');
     } finally {
-      target.disabled = false;
-      target.innerHTML = `${ICONS.sync} Sincronizar Ahora con Google Sheets`;
+      hideSyncOverlay();
+      render();
     }
     return;
   }
@@ -1607,9 +1691,18 @@ window.addEventListener('beforeunload', e => {
 });
 
 async function initApp() {
+  const isCloudHost = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+  if (isCloudHost && (window.location.protocol === 'https:' || window.location.protocol === 'http:')) {
+    showSyncOverlay(
+      'Conectando con Google Drive',
+      'Obteniendo los registros más recientes desde tu Excel en la nube...'
+    );
+  }
+
   try {
     S = await Store.load();
   } catch (err) {
+    hideSyncOverlay();
     $('#app').innerHTML = `
       <div class="card" style="text-align:center;padding:48px 20px;">
         <h2 style="color:var(--danger)">No se pudo iniciar la aplicación</h2>
@@ -1617,6 +1710,8 @@ async function initApp() {
         <p style="color:var(--text-muted)">Inicia el servidor en tu terminal con: <code>npm start</code></p>
       </div>`;
     return;
+  } finally {
+    hideSyncOverlay();
   }
 
   EDIT = false;
