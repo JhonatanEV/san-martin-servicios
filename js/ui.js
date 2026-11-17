@@ -71,22 +71,21 @@ function showLoginOverlay(errorMsg = '') {
     <div class="login-card">
       <div class="login-icon">${ICONS.building}</div>
       <h2 class="login-title">Edificio San Martín</h2>
-      <div class="login-subtitle">Control de Servicios · Acceso con DNI</div>
+      <div class="login-subtitle">Control de Servicios · Acceso al Portal</div>
 
       ${errorMsg ? `<div class="login-error">${errorMsg}</div>` : ''}
 
       <form id="loginForm" style="display:flex;flex-direction:column;gap:12px;text-align:left;">
         <div>
-          <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px;">NÚMERO DE DNI</label>
-          <input type="text" id="loginDni" maxlength="12" inputmode="numeric" placeholder="Ingresa tu DNI (ej. 70424972)" required autofocus style="width:100%;font-size:16px;letter-spacing:1px;font-weight:600;text-align:center;">
+          <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px;">DOCUMENTO DE IDENTIDAD (DNI)</label>
+          <input type="text" id="loginDni" maxlength="12" inputmode="numeric" placeholder="Ingresa tu número de DNI" required autofocus style="width:100%;font-size:16px;letter-spacing:1px;font-weight:600;text-align:center;">
         </div>
         <button type="submit" class="btn btn-primary" style="padding:12px;font-size:14px;font-weight:700;margin-top:6px;">
-          Ingresar al Sistema
+          Ingresar al Portal
         </button>
       </form>
-      <div style="font-size:11px;color:var(--text-muted);margin-top:16px;line-height:1.5;">
-        Administrador principal: <b>70424972</b><br>
-        Inquilinos: ingresen con su DNI registrado.
+      <div style="font-size:12px;color:var(--text-muted);margin-top:16px;line-height:1.5;">
+        Ingresa tu número de documento registrado para consultar tus recibos y estado de cuenta.
       </div>
     </div>
   `;
@@ -250,6 +249,7 @@ function renderMonthView() {
   const admin = isAdmin();
 
   const wrapper = $('#month-content-wrapper');
+  const emptyContainer = $('#month-empty-state');
   const kpisContainer = $('#month-kpis-container');
   const alertsContainer = $('#month-alerts-container');
 
@@ -259,11 +259,14 @@ function renderMonthView() {
 
     if (kpisContainer) kpisContainer.innerHTML = '';
     if (alertsContainer) alertsContainer.innerHTML = '';
-    if (wrapper) {
-      wrapper.innerHTML = `
+    if (wrapper) wrapper.style.display = 'none';
+
+    if (emptyContainer) {
+      emptyContainer.style.display = 'block';
+      emptyContainer.innerHTML = `
         <div class="card" style="text-align:center;padding:48px 20px;">
           <div style="color:var(--primary);margin-bottom:12px;">${ICONS.calendar}</div>
-          <h2 style="font-size:18px;font-weight:700;margin-bottom:8px;">${monthName} ${yearStr} no está registrado</h2>
+          <h2 style="font-size:18px;font-weight:700;margin-bottom:8px;">${monthName} ${yearStr} aún no está registrado</h2>
           <p style="color:var(--text-muted);max-width:480px;margin:0 auto 20px;font-size:13px;">
             ${admin ? `Registra el mes para comenzar a ingresar consumos y gastos comunes. ${lastMonthKey ? `Se copiarán las lecturas de <b>${lastMonthKey}</b>.` : ''}` : 'Este mes aún no ha sido publicado por la administración.'}
           </p>
@@ -277,11 +280,9 @@ function renderMonthView() {
     return;
   }
 
-  // Asegurar que el contenedor esté visible
-  if (wrapper && !wrapper.querySelector('.subtabs-bar')) {
-    render();
-    return;
-  }
+  // Cuando el mes sí existe, ocultamos el aviso de mes vacío y mostramos el contenido con sus pestañas
+  if (emptyContainer) emptyContainer.style.display = 'none';
+  if (wrapper) wrapper.style.display = 'block';
 
   const c = calc(S, K);
   const totalPagar = APTS.reduce((s, a) => s + c[a].pay, 0);
