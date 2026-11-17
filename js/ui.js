@@ -229,14 +229,41 @@ function renderFilterBar() {
   years.add(Y);
   years.add(new Date().getFullYear());
   const sortedYears = [...years].sort((a, b) => b - a);
+  const admin = isAdmin();
+
+  let actionButtons = '';
+  if (admin && V === 'month') {
+    if (EDIT) {
+      actionButtons = `
+        <div class="filter-actions-group">
+          ${DIRTY ? `<span class="v-chip v-chip-warning"><span class="v-chip-dot pulse"></span> Sin guardar</span>` : ''}
+          <button class="btn btn-success btn-elevated" id="btnSave" title="Guardar cambios y sincronizar con Drive">
+            ${ICONS.save} <span>Guardar</span>
+          </button>
+          <button class="btn btn-outlined" id="btnCancel" title="Descartar cambios">
+            ${ICONS.close} <span>Cancelar</span>
+          </button>
+        </div>
+      `;
+    } else {
+      actionButtons = `
+        <div class="filter-actions-group">
+          <button class="btn btn-primary btn-elevated" id="btnEdit" title="Activar modo edición para registrar consumos o pagos">
+            ${ICONS.edit} <span>Editar Datos</span>
+          </button>
+        </div>
+      `;
+    }
+  }
 
   let html = `<div class="filter-bar noprint">
-    <div style="display:flex;align-items:center;gap:8px;">
-      <label style="font-weight:700;color:var(--text-muted);font-size:11px;">AÑO:</label>
-      <select data-action="change-year" style="font-weight:700;font-size:13px;padding:5px 10px;">
-        ${sortedYears.map(y => `<option value="${y}" ${y === Y ? 'selected' : ''}>${y}</option>`).join('')}
-      </select>
-    </div>`;
+    <div class="filter-left">
+      <div class="year-selector">
+        <label>AÑO:</label>
+        <select data-action="change-year">
+          ${sortedYears.map(y => `<option value="${y}" ${y === Y ? 'selected' : ''}>${y}</option>`).join('')}
+        </select>
+      </div>`;
 
   if (V === 'month' || V === 'receipt') {
     html += `<div class="month-chips">
@@ -252,7 +279,12 @@ function renderFilterBar() {
     </div>`;
   }
 
-  html += `</div>`;
+  html += `</div>
+    <div class="filter-right">
+      ${actionButtons}
+    </div>
+  </div>`;
+
   container.innerHTML = html;
 }
 
@@ -350,11 +382,17 @@ function renderMonthView() {
   `).join('');
 
   // 3. Sub-Tab 1: Lecturas
-  $('#receipts-title').textContent = `Recibos Generales · ${monthName} ${yearStr}`;
+  $('#receipts-title').textContent = `Recibos del Edificio · ${monthName} ${yearStr}`;
   $('#field-w').value = m.w ?? '';
   $('#field-e').value = m.e ?? '';
   $('#field-d0').value = m.d?.[0] || '';
   $('#field-d1').value = m.d?.[1] || '';
+
+  const totalServicios = (+m.w || 0) + (+m.e || 0);
+  const totalServiciosEl = $('#receipts-total-badge');
+  if (totalServiciosEl) {
+    totalServiciosEl.textContent = `Total Servicios: S/ ${f2(totalServicios)}`;
+  }
 
   const weightOpts = [
     ['1', '1.0'],
@@ -1172,106 +1210,57 @@ function getMonthAlerts(key, calcResult) {
 }
 
 function updateHeaderBar() {
-  const tb = $('#header-actions');
-  if (!tb) return;
-
   const admin = isAdmin();
 
-  // 1. Chip de estado de conexión
-  let statusChip = '';
-  if (Store.isSyncing) {
-    statusChip = `
-      <div class="v-chip v-chip-syncing" title="Sincronización con Google Drive en curso">
-        <span class="v-chip-spinner"></span>
-        <span>Sincronizando...</span>
-      </div>`;
-  } else if (Store.mode === 'server') {
-    statusChip = `
-      <div class="v-chip v-chip-server" title="Conectado al servidor Node.js local">
-        <span class="v-chip-dot"></span>
-        <span>Servidor Activo</span>
-      </div>`;
-  } else if (Store.mode === 'sheets-online') {
-    statusChip = `
-      <div class="v-chip v-chip-online" title="Conectado y sincronizado con Google Sheets en Drive">
-        <span class="v-chip-dot pulse"></span>
-        <span>Drive Online</span>
-      </div>`;
-  } else {
-    statusChip = `
-      <div class="v-chip v-chip-static" title="Modo sin conexión directa">
-        <span class="v-chip-dot"></span>
-        <span>Modo Local</span>
-      </div>`;
-  }
-
-  // 2. Chip de cambios pendientes
-  const dirtyChip = (admin && EDIT && DIRTY)
-    ? `<div class="v-chip v-chip-warning" title="Hay cambios pendientes sin guardar">
-        <span class="v-chip-dot pulse"></span>
-        <span>Sin guardar</span>
-       </div>`
-    : '';
-
-  // 3. Botones de acción principales
-  let actionButtons = '';
-  if (admin) {
-    if (EDIT) {
-      actionButtons = `
-        <button class="btn btn-success btn-elevated" id="btnSave" title="Guardar cambios y sincronizar con Drive">
-          ${ICONS.save}
-          <span>Guardar</span>
-        </button>
-        <button class="btn btn-outlined" id="btnCancel" title="Descartar cambios">
-          ${ICONS.close}
-          <span>Cancelar</span>
-        </button>
-      `;
+  // 1. Mini Chip de estado de conexión junto al título del edificio
+  const brandChip = $('#brand-status-chip');
+  if (brandChip) {
+    if (Store.isSyncing) {
+      brandChip.className = 'mini-status-chip syncing';
+      brandChip.innerHTML = `<span class="v-chip-spinner"></span> Sincronizando`;
+      brandChip.title = 'Sincronización en curso con Google Drive';
+    } else if (Store.mode === 'sheets-online') {
+      brandChip.className = 'mini-status-chip online';
+      brandChip.innerHTML = `<span class="status-dot pulse"></span> Drive Online`;
+      brandChip.title = 'Conectado a Google Sheets en Google Drive';
+    } else if (Store.mode === 'server') {
+      brandChip.className = 'mini-status-chip server';
+      brandChip.innerHTML = `<span class="status-dot"></span> Servidor`;
+      brandChip.title = 'Servidor local Node.js activo';
     } else {
-      actionButtons = `
-        <button class="btn btn-primary btn-elevated" id="btnEdit" title="Activar modo edición para registrar consumos o pagos">
-          ${ICONS.edit}
-          <span>Editar Datos</span>
-        </button>
-      `;
+      brandChip.className = 'mini-status-chip local';
+      brandChip.innerHTML = `<span class="status-dot"></span> Local`;
+      brandChip.title = 'Modo local sin conexión directa a la nube';
     }
   }
 
-  // 4. Perfil de Usuario con avatar y salida
-  let userPill = '';
-  if (CURRENT_USER) {
-    const roleLabel = admin ? 'Administrador' : `Dpto ${CURRENT_USER.apt || ''}`;
-    userPill = `
-      <div class="v-user-pill ${admin ? 'admin' : ''}">
-        <div class="v-user-avatar">
-          ${ICONS.user}
+  // 2. Perfil de Usuario en el extremo derecho del Header (Limpio y en una sola línea)
+  const userBadgeContainer = $('#header-user-badge');
+  if (userBadgeContainer) {
+    if (CURRENT_USER) {
+      const roleLabel = admin ? 'Admin' : `Dpto ${CURRENT_USER.apt || ''}`;
+      userBadgeContainer.innerHTML = `
+        <div class="v-user-pill ${admin ? 'admin' : ''}">
+          <div class="v-user-avatar">
+            ${ICONS.user}
+          </div>
+          <div class="v-user-meta">
+            <span class="v-user-name">${CURRENT_USER.nombre}</span>
+            <span class="v-user-sub">${roleLabel}</span>
+          </div>
+          <button class="v-btn-logout" id="btnLogout" title="Cerrar Sesión">
+            ${ICONS.logout}
+            <span class="logout-label">Salir</span>
+          </button>
         </div>
-        <div class="v-user-meta">
-          <span class="v-user-name">${CURRENT_USER.nombre}</span>
-          <span class="v-user-sub">${roleLabel}</span>
-        </div>
-        <button class="v-btn-logout" id="btnLogout" title="Cerrar Sesión">
-          ${ICONS.logout}
-          <span class="logout-label">Salir</span>
-        </button>
-      </div>
-    `;
+      `;
+    } else {
+      userBadgeContainer.innerHTML = '';
+    }
   }
 
-  tb.innerHTML = `
-    <div class="header-actions-container">
-      <div class="header-meta-group">
-        ${statusChip}
-        ${dirtyChip}
-      </div>
-      <div class="header-btn-group">
-        ${actionButtons}
-      </div>
-      <div class="header-user-group">
-        ${userPill}
-      </div>
-    </div>
-  `;
+  // 3. Sincronizar los botones de acción en la barra de control inferior
+  renderFilterBar();
 }
 
 function applyLockState() {
@@ -1679,6 +1668,7 @@ document.addEventListener('change', e => {
   DIRTY = true;
   if (V === 'month') {
     renderMonthView();
+    renderFilterBar();
     applyLockState();
   }
 });

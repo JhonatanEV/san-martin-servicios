@@ -10,9 +10,10 @@
   <!-- HEADER PRINCIPAL -->
   <header>
     <div class="top-bar">
+      <!-- 1. Marca / Título con Chip de Estado en línea -->
       <div class="brand">
         <div class="brand-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
             <path d="M9 22v-4h6v4"></path>
             <path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M12 6h.01"></path>
@@ -20,34 +21,46 @@
             <path d="M16 14h.01"></path><path d="M8 10h.01"></path><path d="M8 14h.01"></path>
           </svg>
         </div>
-        <div>
-          <h1>Edificio San Martín</h1>
+        <div class="brand-info">
+          <div class="brand-title-line">
+            <h1>Edificio San Martín</h1>
+            <span id="brand-status-chip"></span>
+          </div>
           <small>Agua, Luz y Aportes Comunes</small>
         </div>
       </div>
+
+      <!-- 2. Navegación Principal Compacta (Pestañas estilo Vuetify) -->
       <nav id="nav">
         <button data-v="month" class="active">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          <span>Control Mensual</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <span class="tab-label-full">Control Mensual</span>
+          <span class="tab-label-short">Mensual</span>
         </button>
         <button data-v="year">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-          <span>Resumen Anual</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+          <span class="tab-label-full">Resumen Anual</span>
+          <span class="tab-label-short">Anual</span>
         </button>
         <button data-v="receipt">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-          <span>Recibos WhatsApp</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+          <span class="tab-label-full">Recibos WhatsApp</span>
+          <span class="tab-label-short">Recibos</span>
         </button>
         <button data-v="users" id="nav-btn-users" style="display:none;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-          <span>Usuarios</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <span class="tab-label-full">Usuarios</span>
+          <span class="tab-label-short">Usuarios</span>
         </button>
         <button data-v="cfg" id="nav-btn-cfg" style="display:none;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-          <span>Configuración & Drive</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          <span class="tab-label-full">Configuración</span>
+          <span class="tab-label-short">Ajustes</span>
         </button>
       </nav>
-      <div id="header-actions"></div>
+
+      <!-- 3. Perfil de Usuario y Logout (Limpio, sin botones de acción) -->
+      <div id="header-user-badge"></div>
     </div>
   </header>
 
@@ -81,27 +94,80 @@
 
         <!-- SUB-TAB 1: LECTURAS Y RECIBOS -->
         <div id="tab-lecturas" class="subtab-content active">
-          <!-- Recibos Generales -->
-          <div class="card">
-            <div class="card-header">
-              <h3 class="card-title" id="receipts-title">Recibos Generales</h3>
+          <!-- Recibos Generales (Diseño Compacto y Profesional) -->
+          <div class="card card-compact general-receipts-card">
+            <div class="card-header general-receipts-head">
+              <div class="receipts-head-title">
+                <div class="receipts-head-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                </div>
+                <div>
+                  <h3 class="card-title" id="receipts-title">Recibos Generales del Edificio</h3>
+                  <small class="receipts-head-sub">Importes oficiales de Sedapal y Luz del Sur</small>
+                </div>
+              </div>
+              <div id="receipts-total-badge" class="v-chip v-chip-online">
+                Total Servicios: S/ 0.00
+              </div>
             </div>
-            <div class="form-grid-4">
-              <div class="form-group">
-                <label>Recibo Sedapal / Agua (S/)</label>
-                <input type="number" step="0.01" data-action="field" data-prop="w" id="field-w" placeholder="0.00">
+
+            <div class="receipts-compact-grid">
+              <!-- Recibo Sedapal -->
+              <div class="receipt-input-card water-card">
+                <div class="receipt-input-header">
+                  <span class="receipt-icon-circle water-circle">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+                  </span>
+                  <div>
+                    <label for="field-w">Recibo Sedapal (Agua)</label>
+                    <small>Medidor matriz</small>
+                  </div>
+                </div>
+                <div class="input-with-prefix">
+                  <span class="currency-tag">S/</span>
+                  <input type="number" step="0.01" data-action="field" data-prop="w" id="field-w" placeholder="0.00">
+                </div>
               </div>
-              <div class="form-group">
-                <label>Recibo Luz Área Común (S/)</label>
-                <input type="number" step="0.01" data-action="field" data-prop="e" id="field-e" placeholder="0.00">
+
+              <!-- Recibo Luz Área Común -->
+              <div class="receipt-input-card light-card">
+                <div class="receipt-input-header">
+                  <span class="receipt-icon-circle light-circle">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                  </span>
+                  <div>
+                    <label for="field-e">Luz Común</label>
+                    <small>Bomba y pasadizos</small>
+                  </div>
+                </div>
+                <div class="input-with-prefix">
+                  <span class="currency-tag">S/</span>
+                  <input type="number" step="0.01" data-action="field" data-prop="e" id="field-e" placeholder="0.00">
+                </div>
               </div>
-              <div class="form-group">
-                <label>Lectura Desde</label>
-                <input type="date" data-action="field" data-prop="d0" id="field-d0">
-              </div>
-              <div class="form-group">
-                <label>Lectura Hasta</label>
-                <input type="date" data-action="field" data-prop="d1" id="field-d1">
+
+              <!-- Rango de Fechas -->
+              <div class="receipt-input-card dates-card">
+                <div class="receipt-input-header">
+                  <span class="receipt-icon-circle date-circle">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                  </span>
+                  <div>
+                    <label>Periodo de Lectura</label>
+                    <small>Facturación del mes</small>
+                  </div>
+                </div>
+                <div class="dates-range-group">
+                  <div class="date-field">
+                    <span>Desde</span>
+                    <input type="date" data-action="field" data-prop="d0" id="field-d0">
+                  </div>
+                  <div class="date-sep">→</div>
+                  <div class="date-field">
+                    <span>Hasta</span>
+                    <input type="date" data-action="field" data-prop="d1" id="field-d1">
+                  </div>
+                </div>
               </div>
             </div>
           </div>
