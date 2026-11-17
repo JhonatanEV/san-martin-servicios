@@ -1,0 +1,8 @@
+{
+  "name": "san-martin-servicios",
+  "version": "1.0.0",
+  "description": "Cálculo mensual de agua y luz del área común - Edificio San Martín",
+  "private": true,
+  "scripts": { "start": "node server/server.js", "test": "node --test tests/engine.test.js" },
+  "engines": { "node": ">=18" }
+}
