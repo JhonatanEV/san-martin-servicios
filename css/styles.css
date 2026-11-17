@@ -4,43 +4,43 @@
  */
 
 :root {
-  --bg-app: #f8fafc;
+  --bg-app: #f4f6f8;
   --bg-card: #ffffff;
-  --bg-subtle: #f1f5f9;
-  --text-main: #0f172a;
-  --text-muted: #64748b;
+  --bg-subtle: #eceff1;
+  --text-main: #263238;
+  --text-muted: #607d8b;
   --text-inverse: #ffffff;
-  --border-color: #e2e8f0;
-  --border-focus: #3b82f6;
+  --border-color: #cfd8dc;
+  --border-focus: #1867c0;
 
-  /* Colores principales */
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-light: #eff6ff;
+  /* Colores estilo Vuetify Material (nítidos, sólidos, sin degradados ni tonos chillones) */
+  --primary: #1867c0;
+  --primary-hover: #1555a6;
+  --primary-light: #e3f2fd;
 
-  --water-color: #0284c7;
-  --water-bg: #e0f2fe;
-  --light-color: #d97706;
-  --light-bg: #fef3c7;
-  --extra-color: #7c3aed;
-  --extra-bg: #f5f3ff;
+  --water-color: #0277bd;
+  --water-bg: #e1f5fe;
+  --light-color: #f57f17;
+  --light-bg: #fffde7;
+  --extra-color: #6a1b9a;
+  --extra-bg: #f3e5f5;
 
   /* Estados */
-  --success: #059669;
-  --success-bg: #ecfdf5;
-  --warning: #d97706;
-  --warning-bg: #fffbeb;
-  --danger: #dc2626;
-  --danger-bg: #fef2f2;
+  --success: #2e7d32;
+  --success-bg: #e8f5e9;
+  --warning: #ef6c00;
+  --warning-bg: #fff3e0;
+  --danger: #c62828;
+  --danger-bg: #ffebee;
 
   --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
   --radius-full: 9999px;
 
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
 
   color-scheme: light;
 }
@@ -48,35 +48,35 @@
 :root[data-theme="dark"],
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg-app: #0b0f17;
-    --bg-card: #131b26;
-    --bg-subtle: #1c2738;
-    --text-main: #f1f5f9;
-    --text-muted: #94a3b8;
-    --border-color: #243042;
-    --border-focus: #60a5fa;
+    --bg-app: #121212;
+    --bg-card: #1e1e1e;
+    --bg-subtle: #2d2d2d;
+    --text-main: #eceff1;
+    --text-muted: #b0bec5;
+    --border-color: #37474f;
+    --border-focus: #2196f3;
 
-    --primary: #3b82f6;
-    --primary-hover: #60a5fa;
-    --primary-light: #1e293b;
+    --primary: #2196f3;
+    --primary-hover: #42a5f5;
+    --primary-light: #152636;
 
-    --water-color: #38bdf8;
-    --water-bg: #0c2d48;
-    --light-color: #fbbf24;
-    --light-bg: #3d2c00;
-    --extra-color: #a78bfa;
-    --extra-bg: #2d184d;
+    --water-color: #29b6f6;
+    --water-bg: #0d2838;
+    --light-color: #ffb300;
+    --light-bg: #332605;
+    --extra-color: #ab47bc;
+    --extra-bg: #2b1336;
 
-    --success: #10b981;
-    --success-bg: #064e3b;
-    --warning: #f59e0b;
-    --warning-bg: #451a03;
-    --danger: #f87171;
-    --danger-bg: #450a0a;
+    --success: #4caf50;
+    --success-bg: #132d16;
+    --warning: #ffa726;
+    --warning-bg: #382105;
+    --danger: #ef5350;
+    --danger-bg: #380e0e;
 
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6);
 
     color-scheme: dark;
   }
@@ -126,13 +126,13 @@ header {
 .brand-icon {
   width: 38px;
   height: 38px;
-  background: linear-gradient(135deg, #2563eb, #0284c7);
+  background-color: var(--primary);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 4px rgba(24, 103, 192, 0.3);
   flex-shrink: 0;
 }
 
@@ -150,30 +150,31 @@ header {
   color: var(--text-muted);
 }
 
-/* Navegación por pestañas */
+/* Navegación por pestañas estilo Vuetify (sólidas, nítidas, alto contraste) */
 nav {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   background-color: var(--bg-subtle);
-  padding: 4px;
+  padding: 5px;
   border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
   overflow-x: auto;
   max-width: 100%;
 }
 
 nav button {
-  background: none;
-  border: none;
+  background: transparent;
+  border: 1px solid transparent;
   color: var(--text-muted);
   font-size: 13px;
   font-weight: 600;
-  padding: 7px 12px;
+  padding: 8px 14px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   white-space: nowrap;
 }
 
@@ -183,12 +184,20 @@ nav button svg {
 
 nav button:hover {
   color: var(--text-main);
+  background-color: rgba(255, 255, 255, 0.7);
 }
 
 nav button.active {
-  background-color: var(--bg-card);
-  color: var(--primary);
-  box-shadow: var(--shadow-sm);
+  background-color: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(24, 103, 192, 0.35);
+}
+
+nav button.active svg {
+  color: #ffffff;
+  stroke: #ffffff;
 }
 
 /* Acciones en Header */
@@ -380,18 +389,21 @@ main {
 }
 
 .month-chip {
-  padding: 5px 12px;
-  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   background-color: var(--bg-card);
   color: var(--text-main);
   font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .month-chip:hover {
-  background-color: var(--bg-subtle);
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary);
 }
 
 .month-chip.active {
@@ -399,11 +411,12 @@ main {
   border-color: var(--primary);
   color: #ffffff;
   font-weight: 700;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 4px rgba(24, 103, 192, 0.35);
 }
 
 .month-chip.has-data {
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--text-main);
 }
 
 .month-chip.no-data {
@@ -863,43 +876,52 @@ input:disabled, select:disabled, textarea:disabled {
   border-radius: 3px;
 }
 
-/* Sub-pestañas para organizar secciones */
+/* Sub-pestañas para organizar secciones (estilo Vuetify tabs) */
 .subtabs-bar {
   display: flex;
   gap: 8px;
   background-color: var(--bg-card);
-  padding: 6px 10px;
+  padding: 6px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
-  margin-bottom: 16px;
+  margin-bottom: 18px;
   overflow-x: auto;
+  box-shadow: var(--shadow-sm);
 }
 
 .subtab-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
+  padding: 9px 16px;
   border-radius: var(--radius-sm);
-  border: 1px solid transparent;
-  background: none;
-  color: var(--text-muted);
+  border: 1px solid #cfd8dc;
+  background-color: var(--bg-subtle);
+  color: var(--text-main);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
 }
 
 .subtab-btn:hover {
-  color: var(--text-main);
-  background-color: var(--bg-subtle);
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary);
 }
 
 .subtab-btn.active {
-  background-color: var(--primary-light);
-  color: var(--primary);
-  border-color: rgba(37, 99, 235, 0.25);
+  background-color: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+  font-weight: 700;
+  box-shadow: 0 2px 5px rgba(24, 103, 192, 0.35);
+}
+
+.subtab-btn.active svg {
+  color: #ffffff;
+  stroke: #ffffff;
 }
 
 .subtab-content {
