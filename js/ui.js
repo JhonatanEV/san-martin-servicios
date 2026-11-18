@@ -987,6 +987,41 @@ function renderReceiptView() {
 }
 
 /**
+ * Guarda y sincroniza inmediatamente los cambios de usuarios en local y en Google Sheets
+ */
+async function saveUsersImmediately(actionMsg = 'Usuarios actualizados correctamente') {
+  const isCloud = Store.mode === 'sheets-online' || !Store.mode || Store.mode === 'static' || Store.mode === 'cloud';
+  showSyncOverlay(
+    'Guardando Usuarios en Google Drive',
+    isCloud
+      ? 'Sincronizando los accesos y usuarios directamente en tu archivo Excel...'
+      : 'Guardando usuarios en el servidor y respaldando...'
+  );
+
+  try {
+    const result = await Store.save(S);
+    DIRTY = false;
+
+    let syncInfo = '';
+    if (result.sheetsSynced === true) {
+      syncInfo = ' y sincronizado con Google Sheets en Drive.';
+    } else if (result.sheetsSynced === false) {
+      syncInfo = ' (Guardado localmente. Falló sincronización con Drive, revisa tu URL).';
+    } else {
+      syncInfo = ' guardado correctamente.';
+    }
+
+    toast(`${actionMsg}${syncInfo}`, result.sheetsSynced === false ? 'error' : 'success');
+  } catch (err) {
+    toast('Error al guardar usuarios: ' + err.message, 'error');
+  } finally {
+    hideSyncOverlay();
+    renderUsersView();
+    updateHeaderBar();
+  }
+}
+
+/**
  * Renderiza la vista de Gestión de Usuarios
  */
 function renderUsersView() {
@@ -998,11 +1033,18 @@ function renderUsersView() {
   container.innerHTML = `
     <div class="card">
       <div class="card-header">
-        <h3 class="card-title">${ICONS.users} Gestión de Usuarios y Accesos por DNI</h3>
-        <span class="badge badge-server">Pestaña "Usuarios" en Google Sheets</span>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <h3 class="card-title">${ICONS.users} Gestión de Usuarios y Accesos por DNI</h3>
+          <span class="v-chip v-chip-online" style="font-size:11px;">
+            <span class="v-chip-dot pulse"></span> Guardado Directo en Drive
+          </span>
+        </div>
+        <button class="btn btn-sm btn-outlined" data-action="sync-users-sheets" title="Sincronizar usuarios ahora con Google Sheets">
+          ${ICONS.sync} Sincronizar con Drive
+        </button>
       </div>
       <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">
-        Registra a los inquilinos para que puedan ingresar al enlace de GitHub Pages con su DNI y ver sus recibos en línea.
+        Registra a los inquilinos para que puedan ingresar al portal con su DNI y ver sus recibos en línea. <b>Todo cambio se guarda automáticamente en tu hoja Excel de Google Drive.</b>
       </p>
 
       <form id="addUserForm" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:12px;background:var(--bg-subtle);padding:14px;border-radius:var(--radius-md);margin-bottom:20px;align-items:end;">
@@ -1404,23 +1446,26 @@ document.addEventListener('click', async e => {
   else if (action === 'toggle-user-status') {
     const idx = +target.dataset.idx;
     if (S.users && S.users[idx]) {
-      S.users[idx].status = S.users[idx].status === 'Inactivo' ? 'Activo' : 'Inactivo';
-      DIRTY = true;
-      toast(`Usuario ${S.users[idx].nombre} ahora está ${S.users[idx].status}. Pulsa "Guardar" para sincronizar con Drive.`);
-      renderUsersView();
+      const u = S.users[idx];
+      u.status = u.status === 'Inactivo' ? 'Activo' : 'Inactivo';
+      const estadoDesc = u.status === 'Activo' ? 'activado' : 'dado de baja';
+      await saveUsersImmediately(`Usuario ${u.nombre} ${estadoDesc}`);
     }
   }
 
   else if (action === 'delete-user') {
     const idx = +target.dataset.idx;
     if (S.users && S.users[idx]) {
-      if (confirm(`¿Eliminar al usuario ${S.users[idx].nombre} (${S.users[idx].dni})?`)) {
+      const u = S.users[idx];
+      if (confirm(`¿Eliminar definitivamente al usuario ${u.nombre} (${u.dni})?`)) {
         S.users.splice(idx, 1);
-        DIRTY = true;
-        toast('Usuario eliminado. Recuerda pulsar "Guardar" para actualizar Google Sheets.');
-        renderUsersView();
+        await saveUsersImmediately(`Usuario ${u.nombre} eliminado`);
       }
     }
+  }
+
+  else if (action === 'sync-users-sheets') {
+    await saveUsersImmediately('Usuarios sincronizados con Google Sheets');
   }
 
   else if (action === 'create-month') {
@@ -1534,16 +1579,21 @@ document.addEventListener('click', async e => {
   }
 });
 
-document.addEventListener('submit', e => {
+document.addEventListener('submit', async e => {
   if (e.target && e.target.id === 'addUserForm') {
     e.preventDefault();
-    const dni = ($('#newDni').value || '').trim();
-    const nombre = ($('#newName').value || '').trim();
-    const apt = $('#newApt').value;
-    const role = $('#newRole').value;
+    const dniInput = $('#newDni');
+    const nameInput = $('#newName');
+    const aptInput = $('#newApt');
+    const roleInput = $('#newRole');
+
+    const dni = (dniInput?.value || '').trim();
+    const nombre = (nameInput?.value || '').trim();
+    const apt = aptInput?.value || 'Todos';
+    const role = roleInput?.value || 'inquilino';
 
     if (!dni || !nombre) {
-      toast('Ingresa DNI y Nombre', 'error');
+      toast('Ingresa DNI y Nombre del usuario', 'error');
       return;
     }
 
@@ -1553,9 +1603,10 @@ document.addEventListener('submit', e => {
     }
 
     S.users.push({ dni, nombre, apt, role, status: 'Activo' });
-    DIRTY = true;
-    toast(`Usuario ${nombre} (${dni}) agregado. Pulsa "Guardar" para sincronizar.`, 'success');
-    renderUsersView();
+    if (dniInput) dniInput.value = '';
+    if (nameInput) nameInput.value = '';
+
+    await saveUsersImmediately(`Usuario ${nombre} (${dni}) guardado exitosamente`);
   }
 });
 
